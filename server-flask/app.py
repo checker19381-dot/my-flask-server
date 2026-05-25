@@ -107,11 +107,11 @@ def next_action():
         return jsonify({"action": "wait_for_element", "by": "id", "selector": "MonthDropdown", "timeout": 10})
     elif step == 15:
     state["step"] = 16
-    # Для месяца используем выбор по индексу (от 0 до 11)
+    # Месяц: индекс от 0 (январь) до 11 (декабрь)
     return jsonify({"action": "select_dropdown_index", "by": "id", "selector": "MonthDropdown", "index": random.randint(0, 11)})
     elif step == 16:
     state["step"] = 17
-    # Для дня используем выбор по индексу (от 0 до 27)
+    # День: индекс от 0 (1-е число) до 27 (28-е число)
     return jsonify({"action": "select_dropdown_index", "by": "id", "selector": "DayDropdown", "index": random.randint(0, 27)})
     elif step == 17:
         state["step"] = 18
