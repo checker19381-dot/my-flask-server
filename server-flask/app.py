@@ -102,15 +102,15 @@ def next_action():
     elif step == 13:
         state["step"] = 14
         return jsonify({"action": "click", "by": "id", "selector": "sign-up-link"})
-    elif step == 14:
+        elif step == 14:
         state["step"] = 15
         return jsonify({"action": "wait_for_element", "by": "id", "selector": "MonthDropdown", "timeout": 10})
     elif step == 15:
         state["step"] = 16
-        return jsonify({"action": "select_dropdown_index", "by": "id", "selector": "MonthDropdown", "index": random.randint(0, 11)})
+        return jsonify({"action": "wait", "seconds": 0.5})
     elif step == 16:
         state["step"] = 17
-        return jsonify({"action": "select_dropdown_index", "by": "id", "selector": "DayDropdown", "index": random.randint(0, 27)})
+        return jsonify({"action": "wait_for_element", "by": "id", "selector": "signup-username", "timeout": 10})
     elif step == 17:
         state["step"] = 18
         return jsonify({"action": "select_dropdown", "by": "id", "selector": "YearDropdown", "value": str(random.randint(1980, 2005))})
