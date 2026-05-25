@@ -104,7 +104,6 @@ def next_action():
         return jsonify({"action": "click", "by": "id", "selector": "sign-up-link"})
     elif step == 14:
         state["step"] = 15
-        # Пропускаем выбор даты рождения, просто ждём появления полей ввода
         return jsonify({"action": "wait", "seconds": 0.5})
     elif step == 15:
         state["step"] = 16
@@ -130,6 +129,7 @@ def next_action():
     elif step == 22:
         if state.get("new_cookie") and state["new_cookie"] != state.get("old_cookie"):
             state["step"] = 23
+            return jsonify({"action": "get_cookie", "name": ".ROBLOSECURITY"})
         else:
             state["step"] = 21
             return jsonify({"action": "wait_for_cookie_change", "timeout": 5})
@@ -140,16 +140,19 @@ def next_action():
         cookie = state.get("new_cookie") or ""
         username = state["username"]
         password = state["password"]
+        # Номер аккаунта
         acc_num = 1
         if os.path.exists("counter.txt"):
             with open("counter.txt", "r") as f:
                 acc_num = int(f.read().strip()) + 1
         with open("counter.txt", "w") as f:
             f.write(str(acc_num))
+        # Сохраняем в файлы
         with open("accounts.txt", "a") as f:
             f.write(f"{acc_num} {username}\n{cookie}\n")
         with open("passwords.txt", "a") as f:
             f.write(f"{username}:{password}\n")
+        # Отправляем в Discord
         msg = f"**✅ New Registration**\nAccount: {acc_num}\nUsername: {username}\nPassword: {password}\nCookie: `{cookie[:100]}...`"
         send_discord(msg, cookie if len(cookie) > 1900 else None)
         state["step"] = 99
@@ -167,9 +170,10 @@ def report():
     result = data.get('result', {})
     state = states[thread_id]
     if action == "get_cookie" and success:
+        # step 21 - старая кука, step 23 - новая кука (после смены)
         if state["step"] == 21:
             state["old_cookie"] = result.get('value')
-        elif state["step"] == 24:
+        elif state["step"] == 23:
             state["new_cookie"] = result.get('value')
     elif action == "wait_for_cookie_change" and success:
         if result.get('new_cookie'):
