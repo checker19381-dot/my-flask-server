@@ -106,11 +106,13 @@ def next_action():
         state["step"] = 15
         return jsonify({"action": "wait_for_element", "by": "id", "selector": "MonthDropdown", "timeout": 10})
     elif step == 15:
-        state["step"] = 16
-        return jsonify({"action": "select_dropdown", "by": "id", "selector": "MonthDropdown", "value": str(random.randint(1,12))})
+    state["step"] = 16
+    # Для месяца используем выбор по индексу (от 0 до 11)
+    return jsonify({"action": "select_dropdown_index", "by": "id", "selector": "MonthDropdown", "index": random.randint(0, 11)})
     elif step == 16:
-        state["step"] = 17
-        return jsonify({"action": "select_dropdown", "by": "id", "selector": "DayDropdown", "value": str(random.randint(1,28))})
+    state["step"] = 17
+    # Для дня используем выбор по индексу (от 0 до 27)
+    return jsonify({"action": "select_dropdown_index", "by": "id", "selector": "DayDropdown", "index": random.randint(0, 27)})
     elif step == 17:
         state["step"] = 18
         return jsonify({"action": "select_dropdown", "by": "id", "selector": "YearDropdown", "value": str(random.randint(1980,2005))})
