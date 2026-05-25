@@ -102,49 +102,41 @@ def next_action():
     elif step == 13:
         state["step"] = 14
         return jsonify({"action": "click", "by": "id", "selector": "sign-up-link"})
-        elif step == 14:
+    elif step == 14:
         state["step"] = 15
-        return jsonify({"action": "wait_for_element", "by": "id", "selector": "MonthDropdown", "timeout": 10})
+        # Пропускаем выбор даты рождения, просто ждём появления полей ввода
+        return jsonify({"action": "wait", "seconds": 0.5})
     elif step == 15:
         state["step"] = 16
-        return jsonify({"action": "wait", "seconds": 0.5})
+        return jsonify({"action": "wait_for_element", "by": "id", "selector": "signup-username", "timeout": 10})
     elif step == 16:
         state["step"] = 17
-        return jsonify({"action": "wait_for_element", "by": "id", "selector": "signup-username", "timeout": 10})
+        return jsonify({"action": "fill", "by": "id", "selector": "signup-username", "value": state["username"]})
     elif step == 17:
         state["step"] = 18
-        return jsonify({"action": "select_dropdown", "by": "id", "selector": "YearDropdown", "value": str(random.randint(1980, 2005))})
+        return jsonify({"action": "fill", "by": "id", "selector": "signup-password", "value": state["password"]})
     elif step == 18:
         state["step"] = 19
-        return jsonify({"action": "wait_for_element", "by": "id", "selector": "signup-username", "timeout": 10})
+        return jsonify({"action": "wait", "seconds": 1})
     elif step == 19:
         state["step"] = 20
-        return jsonify({"action": "fill", "by": "id", "selector": "signup-username", "value": state["username"]})
+        return jsonify({"action": "click", "by": "id", "selector": "signup-button"})
     elif step == 20:
         state["step"] = 21
-        return jsonify({"action": "fill", "by": "id", "selector": "signup-password", "value": state["password"]})
+        return jsonify({"action": "get_cookie", "name": ".ROBLOSECURITY"})
     elif step == 21:
         state["step"] = 22
-        return jsonify({"action": "wait", "seconds": 1})
+        return jsonify({"action": "wait_for_cookie_change", "timeout": 120})
     elif step == 22:
-        state["step"] = 23
-        return jsonify({"action": "click", "by": "id", "selector": "signup-button"})
+        if state.get("new_cookie") and state["new_cookie"] != state.get("old_cookie"):
+            state["step"] = 23
+        else:
+            state["step"] = 21
+            return jsonify({"action": "wait_for_cookie_change", "timeout": 5})
     elif step == 23:
         state["step"] = 24
         return jsonify({"action": "get_cookie", "name": ".ROBLOSECURITY"})
     elif step == 24:
-        state["step"] = 25
-        return jsonify({"action": "wait_for_cookie_change", "timeout": 120})
-    elif step == 25:
-        if state.get("new_cookie") and state["new_cookie"] != state.get("old_cookie"):
-            state["step"] = 26
-        else:
-            state["step"] = 24
-            return jsonify({"action": "wait_for_cookie_change", "timeout": 5})
-    elif step == 26:
-        state["step"] = 27
-        return jsonify({"action": "get_cookie", "name": ".ROBLOSECURITY"})
-    elif step == 27:
         cookie = state.get("new_cookie") or ""
         username = state["username"]
         password = state["password"]
@@ -175,9 +167,9 @@ def report():
     result = data.get('result', {})
     state = states[thread_id]
     if action == "get_cookie" and success:
-        if state["step"] == 24:
+        if state["step"] == 21:
             state["old_cookie"] = result.get('value')
-        elif state["step"] == 27:
+        elif state["step"] == 24:
             state["new_cookie"] = result.get('value')
     elif action == "wait_for_cookie_change" and success:
         if result.get('new_cookie'):
