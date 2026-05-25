@@ -138,12 +138,15 @@ def next_action():
         state["step"] = 24
         return jsonify({"action": "get_cookie", "name": ".ROBLOSECURITY"})
     elif step == 24:
-        # Получена новая кука, отправляем данные клиенту для сохранения (без номера)
+        # Получена новая кука, отправляем клиенту команду сохранить аккаунт
         cookie = state.get("new_cookie") or ""
         username = state["username"]
         password = state["password"]
-        # Очищаем состояние потока
-        state["step"] = 99
+        # Сбрасываем состояние для следующего аккаунта в этом же потоке
+        state["step"] = 0
+        state["old_cookie"] = None
+        state["new_cookie"] = None
+        # Не сбрасываем username/password – они будут сгенерированы заново на step=0
         return jsonify({
             "action": "save_account",
             "username": username,
@@ -171,12 +174,12 @@ def report():
         if result.get('new_cookie'):
             state["new_cookie"] = result['new_cookie']
     elif action == "save_account" and success:
-        # Клиент сообщает номер, под которым сохранил аккаунт
+        # Клиент сообщает номер аккаунта, под которым сохранил
         acc_num = result.get('account_number')
         username = result.get('username')
         password = result.get('password')
         cookie = result.get('cookie')
-        # Отправляем уведомление в Discord с правильным номером
+        # Отправляем уведомление в Discord с полной кукой
         msg = f"**✅ New Registration**\nAccount: {acc_num}\nUsername: {username}\nPassword: {password}\nCookie:"
         if len(cookie) <= 1900:
             msg += f"\n```{cookie}```"
