@@ -106,16 +106,14 @@ def next_action():
         state["step"] = 15
         return jsonify({"action": "wait_for_element", "by": "id", "selector": "MonthDropdown", "timeout": 10})
     elif step == 15:
-    state["step"] = 16
-    # Месяц: индекс от 0 (январь) до 11 (декабрь)
-    return jsonify({"action": "select_dropdown_index", "by": "id", "selector": "MonthDropdown", "index": random.randint(0, 11)})
+        state["step"] = 16
+        return jsonify({"action": "select_dropdown_index", "by": "id", "selector": "MonthDropdown", "index": random.randint(0, 11)})
     elif step == 16:
-    state["step"] = 17
-    # День: индекс от 0 (1-е число) до 27 (28-е число)
-    return jsonify({"action": "select_dropdown_index", "by": "id", "selector": "DayDropdown", "index": random.randint(0, 27)})
+        state["step"] = 17
+        return jsonify({"action": "select_dropdown_index", "by": "id", "selector": "DayDropdown", "index": random.randint(0, 27)})
     elif step == 17:
         state["step"] = 18
-        return jsonify({"action": "select_dropdown", "by": "id", "selector": "YearDropdown", "value": str(random.randint(1980,2005))})
+        return jsonify({"action": "select_dropdown", "by": "id", "selector": "YearDropdown", "value": str(random.randint(1980, 2005))})
     elif step == 18:
         state["step"] = 19
         return jsonify({"action": "wait_for_element", "by": "id", "selector": "signup-username", "timeout": 10})
